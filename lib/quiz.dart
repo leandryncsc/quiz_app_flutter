@@ -19,7 +19,7 @@ class _QuizState extends State<Quiz> {
   int erros = 0;
   @override
   Widget build(BuildContext context) {
-    //quiz.shuffle();
+    quiz.shuffle();
 
     quiz.forEach(
       (elemento) {
