@@ -1,5 +1,9 @@
 # quiz_app_flutter
 
+Aplicatico para teste os conhecimentos em diferentes assuntos, onde as perguntas 
+são geradas Aleatória junto com as alternativas.
+
+
 <p align="center">
     <img height="470" src="assets/images/home.png">
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
