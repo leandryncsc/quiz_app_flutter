@@ -1,11 +1,11 @@
 # quiz_app_flutter
 
 <p align="center">
-    <img height="100" src="assets/images/home.png">
+    <img height="470" src="assets/images/home.png">
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <img height="100" src="assets/images/quiz.png">
+    <img height="470" src="assets/images/quiz.png">
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <img height="100" src="assets/images/result.png">
+    <img height="470" src="assets/images/result.png">
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
    
          
