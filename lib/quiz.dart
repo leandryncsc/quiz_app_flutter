@@ -118,7 +118,7 @@ class _QuizState extends State<Quiz> {
                   },
                   child: Text(
                     quiz[perguntaNumero - 1]['respostas'][0],
-                    style: TextStyle(fontSize: 20),
+                    style: TextStyle(fontSize: 15),
                   ),
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.fromLTRB(100, 20, 100, 20),

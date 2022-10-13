@@ -24,7 +24,7 @@ class Homepage extends StatelessWidget {
                     onPressed: () {
                       Navigator.pushNamed(context, 'Quiz');
                     },
-                    child: Text('Jogar', style: TextStyle(fontSize: 50)),
+                    child: Text('Jogar', style: TextStyle(fontSize: 45)),
                     style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.fromLTRB(100, 20, 100, 20)),
                   ),
