@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:quiz_app_flutter/resultados.dart';
@@ -5,7 +6,7 @@ import 'package:quiz_app_flutter/resultados.dart';
 import 'quiz_dados.dart';
 
 class Quiz extends StatefulWidget {
-  Quiz({Key? key, required this.quiz}) : super(key: key);
+  const Quiz({Key? key, required this.quiz}) : super(key: key);
 
   final List quiz;
 
@@ -21,28 +22,24 @@ class _QuizState extends State<Quiz> {
   Widget build(BuildContext context) {
     quiz.shuffle();
 
-    quiz.forEach(
-      (elemento) {
-        int alternativaCorreta = elemento['alternativa_correta'];
-        List respostas = elemento['respostas'];
+    for (var elemento in quiz) {
+      int alternativaCorreta = elemento['alternativa_correta'];
+      List respostas = elemento['respostas'];
 
-        String respostaCorreta = elemento['respostas'][alternativaCorreta - 1];
-        //print(respostaCorreta);
+      String respostaCorreta = elemento['respostas'][alternativaCorreta - 1];
+      //print(respostaCorreta);
 
-        respostas.shuffle();
-        int i = 1;
-        respostas.forEach(
-          (elemento) {
-            //print(elemento);
-            if (elemento == respostaCorreta) {
-              alternativaCorreta = i;
-            }
-            i++;
-          },
-        );
-        elemento['alternativa_correta'] = alternativaCorreta;
-      },
-    );
+      respostas.shuffle();
+      int i = 1;
+      for (var elemento in respostas) {
+        //print(elemento);
+        if (elemento == respostaCorreta) {
+          alternativaCorreta = i;
+        }
+        i++;
+      }
+      elemento['alternativa_correta'] = alternativaCorreta;
+    }
 
     /*
     quiz.add({
@@ -77,7 +74,9 @@ class _QuizState extends State<Quiz> {
         } else {
           erros++;
         }
-        print('acertos totais: $acertos erros totais: $erros');
+        if (kDebugMode) {
+          print('acertos totais: $acertos erros totais: $erros');
+        }
 
         if (perguntaNumero == 10) {
           Navigator.pushNamed(context, 'Resultados',
@@ -92,7 +91,7 @@ class _QuizState extends State<Quiz> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: Center(child: Text('Quiz')),
+          title: const Center(child: Text('Quiz')),
         ),
         body: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -100,15 +99,18 @@ class _QuizState extends State<Quiz> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Align(
-                alignment: Alignment.topRight,
+                alignment: Alignment.center,
                 child: Text(
                   'Pergunta $perguntaNumero de 10',
-                  style: TextStyle(fontSize: 20),
+                  style: const TextStyle(fontSize: 20),
                 ),
               ),
-              Text(
-                'Pergunta: \n\n' + quiz[perguntaNumero - 1]['pergunta'],
-                style: TextStyle(fontSize: 20),
+              Center(
+                child: Text(
+                  'Pergunta: \n\n  ${quiz[perguntaNumero - 1]['pergunta']}',
+                  style: const TextStyle(fontSize: 20),
+                  textAlign: TextAlign.center,
+                ),
               ),
               SizedBox(
                 width: double.infinity,
@@ -116,12 +118,13 @@ class _QuizState extends State<Quiz> {
                   onPressed: () {
                     respondeu(1);
                   },
+                  style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.fromLTRB(100, 20, 100, 20),
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white),
                   child: Text(
                     quiz[perguntaNumero - 1]['respostas'][0],
-                    style: TextStyle(fontSize: 15),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.fromLTRB(100, 20, 100, 20),
+                    style: const TextStyle(fontSize: 20),
                   ),
                 ),
               ),
@@ -131,12 +134,13 @@ class _QuizState extends State<Quiz> {
                   onPressed: () {
                     respondeu(2);
                   },
+                  style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.fromLTRB(100, 20, 100, 20),
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white),
                   child: Text(
                     quiz[perguntaNumero - 1]['respostas'][1],
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.fromLTRB(100, 20, 100, 20),
+                    style: const TextStyle(fontSize: 20),
                   ),
                 ),
               ),
@@ -146,12 +150,13 @@ class _QuizState extends State<Quiz> {
                   onPressed: () {
                     respondeu(3);
                   },
+                  style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.fromLTRB(100, 20, 100, 20),
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white),
                   child: Text(
                     quiz[perguntaNumero - 1]['respostas'][2],
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.fromLTRB(100, 20, 100, 20),
+                    style: const TextStyle(fontSize: 20),
                   ),
                 ),
               ),
@@ -161,12 +166,13 @@ class _QuizState extends State<Quiz> {
                   onPressed: () {
                     respondeu(4);
                   },
+                  style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.fromLTRB(100, 20, 100, 20),
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white),
                   child: Text(
                     quiz[perguntaNumero - 1]['respostas'][3],
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.fromLTRB(100, 20, 100, 20),
+                    style: const TextStyle(fontSize: 20),
                   ),
                 ),
               ),

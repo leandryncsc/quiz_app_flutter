@@ -9,7 +9,7 @@ class Homepage extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: Center(child: Text('Quiz')),
+          title: const Center(child: Text('Quiz')),
         ),
         body: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -24,9 +24,12 @@ class Homepage extends StatelessWidget {
                     onPressed: () {
                       Navigator.pushNamed(context, 'Quiz');
                     },
-                    child: Text('Jogar', style: TextStyle(fontSize: 45)),
                     style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.fromLTRB(100, 20, 100, 20)),
+                      padding: const EdgeInsets.fromLTRB(100, 20, 100, 20),
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Jogar', style: TextStyle(fontSize: 45)),
                   ),
                 ),
               ],

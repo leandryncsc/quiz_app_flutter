@@ -18,28 +18,29 @@ class Resultado extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: Center(child: Text('Quiz')),
+          title: const Center(child: Text('Quiz')),
         ),
         body: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Text('Resultado', style: TextStyle(fontSize: 20)),
+              const Text('Resultado', style: TextStyle(fontSize: 20)),
               Text('Você acertou\n${argumentos.acertos} de 10\nperguntas',
-                  style: TextStyle(fontSize: 20)),
+                  style: const TextStyle(fontSize: 20)),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pushNamed(context, 'Quiz');
                   },
-                  child: Text(
+                  style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white),
+                  child: const Text(
                     'Jogar Novamente',
                     style: TextStyle(fontSize: 30),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
                   ),
                 ),
               ),

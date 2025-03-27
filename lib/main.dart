@@ -17,11 +17,11 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
-        '/': (context) => Homepage(),
-        'Quiz': (context) => Quiz(
+        '/': (context) => const Homepage(),
+        'Quiz': (context) => const Quiz(
               quiz: [0],
             ),
-        Resultado.routeName: (context) => Resultado()
+        Resultado.routeName: (context) => const Resultado()
       },
     );
   }
