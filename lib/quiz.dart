@@ -41,32 +41,6 @@ class _QuizState extends State<Quiz> {
       elemento['alternativa_correta'] = alternativaCorreta;
     }
 
-    /*
-    quiz.add({
-      "pergunta": "O Flutter é ?",
-      "respostas": [
-        "uma linguagem",
-        "um aplicativo",
-        "um SDK",
-        "um notebook",
-      ],
-      "alternativa_correta": 3,
-    });
-
-    for (int i = 3; i <= 20; i++) {
-      quiz.add({
-        "pergunta": "pergunta $i",
-        "respostas": [
-          "resposta 1",
-          "resposta 2",
-          "resposta 3",
-          "resposta 4",
-        ],
-        "alternativa_correta": 3,
-      });
-    }
-    */
-
     void respondeu(int respostaNumero) {
       setState(() {
         if (quiz[perguntaNumero - 1]['alternativa_correta'] == respostaNumero) {
