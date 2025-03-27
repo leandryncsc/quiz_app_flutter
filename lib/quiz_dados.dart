@@ -1,4 +1,4 @@
-final List quiz = [
+final List<Map<String, dynamic>> quizData  = [
   {
     "pergunta": "O Flutter é?",
     "respostas": [

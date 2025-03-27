@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 class Argumentos {
-  int acertos = 0;
+  final int acertos;
+  final int totalPerguntas;
 
-  Argumentos(this.acertos);
+  Argumentos(this.acertos, this.totalPerguntas);
 }
 
 class Resultado extends StatelessWidget {
@@ -26,8 +27,11 @@ class Resultado extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               const Text('Resultado', style: TextStyle(fontSize: 20)),
-              Text('Você acertou\n${argumentos.acertos} de 10\nperguntas',
-                  style: const TextStyle(fontSize: 20)),
+              Text(
+                'Você acertou\n${argumentos.acertos} de ${argumentos.totalPerguntas}\nperguntas',
+                style: const TextStyle(fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -35,9 +39,10 @@ class Resultado extends StatelessWidget {
                     Navigator.pushNamed(context, 'Quiz');
                   },
                   style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white),
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
                   child: const Text(
                     'Jogar Novamente',
                     style: TextStyle(fontSize: 30),

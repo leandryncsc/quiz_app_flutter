@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-
 import 'homepage.dart';
 import 'quiz.dart';
 import 'resultados.dart';
+import 'quiz_dados.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,9 +18,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const Homepage(),
-        'Quiz': (context) => const Quiz(
-              quiz: [0],
-            ),
+        'Quiz': (context) => Quiz(quiz: quizData),
         Resultado.routeName: (context) => const Resultado()
       },
     );
