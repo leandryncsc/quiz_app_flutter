@@ -65,6 +65,64 @@ class _QuizState extends State<Quiz> {
     });
   }
 
+  void _mostrarMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.home),
+                title: const Text('Início'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context); // Volta para a tela anterior
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.restart_alt),
+                title: const Text('Reiniciar Quiz'),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() {
+                    perguntaNumero = 1;
+                    acertos = 0;
+                    erros = 0;
+                    _embaralharPerguntas();
+                  });
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.info),
+                title: const Text('Sobre'),
+                onTap: () {
+                  Navigator.pop(context);
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Sobre o Quiz'),
+                      content: const Text(
+                          'Aplicativo de Quiz desenvolvido © Leandro Bezerra.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Verificação de segurança
@@ -83,6 +141,12 @@ class _QuizState extends State<Quiz> {
       home: Scaffold(
         appBar: AppBar(
           title: const Center(child: Text('Quiz')),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () => _mostrarMenu(context),
+            ),
+          ],
         ),
         body: Padding(
           padding: const EdgeInsets.all(20.0),
