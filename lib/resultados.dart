@@ -1,14 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class Argumentos {
+class ResultadoQuiz {
+  final String nivel;
   final int acertos;
   final int totalPerguntas;
   final List<Map<String, dynamic>> perguntas;
   final List<int> respostasUsuario;
 
-  Argumentos(
-      this.acertos, this.totalPerguntas, this.perguntas, this.respostasUsuario);
+  ResultadoQuiz({
+    required this.nivel,
+    required this.acertos,
+    required this.totalPerguntas,
+    required this.perguntas,
+    required this.respostasUsuario,
+  });
+
+  double get porcentagem => (acertos / totalPerguntas) * 100;
+}
+
+class Argumentos {
+  final List<ResultadoQuiz> resultadosPorNivel;
+
+  Argumentos(this.resultadosPorNivel, int length);
 }
 
 class Resultado extends StatelessWidget {
@@ -19,14 +33,21 @@ class Resultado extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final argumentos = ModalRoute.of(context)?.settings.arguments as Argumentos;
-    final double porcentagem =
-        (argumentos.acertos / argumentos.totalPerguntas) * 100;
+
+// Calcula totais consolidados
+    final totalAcertos = argumentos.resultadosPorNivel
+        .fold<int>(0, (int sum, ResultadoQuiz item) => sum + item.acertos);
+
+    final totalPerguntas = argumentos.resultadosPorNivel.fold<int>(
+        0, (int sum, ResultadoQuiz item) => sum + item.totalPerguntas);
+
+    final double porcentagemTotal =
+        totalPerguntas > 0 ? (totalAcertos / totalPerguntas) * 100 : 0.0;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Center(
-          child: Text('Resultados', style: TextStyle(fontSize: 18)),
-        ),
+        title: const Text('Resultados Consolidados',
+            style: TextStyle(fontSize: 18)),
         actions: [
           IconButton(
             icon: const Icon(Icons.list, size: 20),
@@ -45,124 +66,105 @@ class Resultado extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Column(
-              children: [
-                const Text(
-                  'Resultado Final',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            // Resultado geral
+            Card(
+              margin: const EdgeInsets.all(8),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    const Text('Total Geral',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    Text(
+                      '$totalAcertos / $totalPerguntas',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color:
+                            porcentagemTotal >= 60 ? Colors.green : Colors.red,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${porcentagemTotal.toStringAsFixed(1)}% de acerto',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color:
+                            porcentagemTotal >= 60 ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  '${argumentos.acertos} / ${argumentos.totalPerguntas}',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: porcentagem >= 60 ? Colors.green : Colors.red,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  '${porcentagem.toStringAsFixed(1)}% de acerto',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: porcentagem >= 60 ? Colors.green : Colors.red,
-                  ),
-                ),
-              ],
+              ),
             ),
+
+            // Resultados por nível
+            Expanded(
+              child: ListView.builder(
+                itemCount: argumentos.resultadosPorNivel.length,
+                itemBuilder: (context, index) {
+                  final resultado = argumentos.resultadosPorNivel[index];
+                  return Card(
+                    margin: const EdgeInsets.all(8),
+                    child: ListTile(
+                      title: Text('Nível ${resultado.nivel}'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                              '${resultado.acertos}/${resultado.totalPerguntas} perguntas'),
+                          Text(
+                            '${resultado.porcentagem.toStringAsFixed(1)}% de acerto',
+                            style: TextStyle(
+                              color: resultado.porcentagem >= 60
+                                  ? Colors.green
+                                  : Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: Icon(
+                        resultado.porcentagem >= 60
+                            ? Icons.check_circle
+                            : Icons.warning,
+                        color: resultado.porcentagem >= 60
+                            ? Colors.green
+                            : Colors.red,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Botões de ação
             Column(
               children: [
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, 'Quiz');
-                    },
+                    onPressed: () => Navigator.pushNamed(context, 'Quiz'),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
                       backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
                     ),
-                    child: const Text(
-                      'Jogar Novamente',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    child: const Text('Jogar Novamente',
+                        style: TextStyle(fontSize: 16)),
                   ),
                 ),
                 const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
-                  height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              DetalhesResultados(argumentos: argumentos),
-                        ),
-                      );
-                    },
+                    onPressed: () => SystemNavigator.pop(),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      backgroundColor: Colors.grey[800],
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text(
-                      'Ver Detalhes',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text(
-                            'Sair do Aplicativo',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          content: const Text(
-                            'Deseja realmente sair do quiz?',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text(
-                                'Cancelar',
-                                style: TextStyle(fontSize: 14),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () => SystemNavigator.pop(),
-                              child: const Text(
-                                'Sair',
-                                style:
-                                    TextStyle(fontSize: 14, color: Colors.red),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
                       backgroundColor: Colors.red[400],
-                      foregroundColor: Colors.white,
                     ),
-                    child: const Text(
-                      'Sair',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    child: const Text('Sair', style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ],
@@ -182,47 +184,70 @@ class DetalhesResultados extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detalhes das Respostas'),
-      ),
-      body: ListView.builder(
-        itemCount: argumentos.totalPerguntas,
-        itemBuilder: (context, index) {
-          final pergunta = argumentos.perguntas[index];
-          final respostaUsuario = argumentos.respostasUsuario[index];
-          final respostaCorreta = pergunta['alternativa_correta'] as int;
-          final acertou = respostaUsuario == respostaCorreta;
+    return DefaultTabController(
+      length: argumentos.resultadosPorNivel.length,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Detalhes por Nível'),
+          bottom: TabBar(
+            tabs: argumentos.resultadosPorNivel
+                .map((resultado) => Tab(text: resultado.nivel))
+                .toList(),
+          ),
+        ),
+        body: TabBarView(
+          children: argumentos.resultadosPorNivel.map((resultado) {
+            return ListView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: resultado.totalPerguntas,
+              itemBuilder: (context, index) {
+                final pergunta = resultado.perguntas[index];
+                final respostaUsuario = resultado.respostasUsuario[index];
+                final respostaCorreta = pergunta['alternativa_correta'] as int;
+                final acertou = respostaUsuario == respostaCorreta;
 
-          return Card(
-            margin: const EdgeInsets.all(8),
-            child: ListTile(
-              title: Text('Pergunta ${index + 1}'),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(pergunta['pergunta']),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Sua resposta: ${pergunta['respostas'][respostaUsuario - 1]}',
-                    style: TextStyle(
+                return Card(
+                  margin: const EdgeInsets.all(4),
+                  child: ExpansionTile(
+                    title: Text('Pergunta ${index + 1}'),
+                    leading: Icon(
+                      acertou ? Icons.check : Icons.close,
                       color: acertou ? Colors.green : Colors.red,
-                      fontWeight: FontWeight.bold,
                     ),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              pergunta['pergunta'],
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Sua resposta: ${pergunta['respostas'][respostaUsuario - 1]}',
+                              style: TextStyle(
+                                color: acertou ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              'Resposta correta: ${pergunta['respostas'][respostaCorreta - 1]}',
+                              style: const TextStyle(color: Colors.green),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    'Resposta correta: ${pergunta['respostas'][respostaCorreta - 1]}',
-                    style: const TextStyle(color: Colors.green),
-                  ),
-                ],
-              ),
-              trailing: Icon(
-                acertou ? Icons.check : Icons.close,
-                color: acertou ? Colors.green : Colors.red,
-              ),
-            ),
-          );
-        },
+                );
+              },
+            );
+          }).toList(),
+        ),
       ),
     );
   }

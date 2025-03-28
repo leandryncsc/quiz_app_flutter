@@ -1,12 +1,21 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart'; // Para SystemNavigator
 import 'package:flutter/material.dart';
-import 'package:quiz_app_flutter/resultados.dart';
+import 'package:flutter/services.dart';
 
 class Quiz extends StatefulWidget {
-  const Quiz({Key? key, required this.quiz}) : super(key: key);
+  final List<Map<String, dynamic>> quizFacil;
+  final List<Map<String, dynamic>> quizMedio;
+  final List<Map<String, dynamic>> quizDificil;
+  final String nivelInicial;
 
-  final List<Map<String, dynamic>> quiz;
+  const Quiz({
+    Key? key,
+    required this.quizFacil,
+    required this.quizMedio,
+    required this.quizDificil,
+    this.nivelInicial = 'fácil',
+  }) : super(key: key);
+
   @override
   State<Quiz> createState() => _QuizState();
 }
@@ -16,17 +25,36 @@ class _QuizState extends State<Quiz> {
   int acertos = 0;
   int erros = 0;
   late List<Map<String, dynamic>> perguntasEmbaralhadas;
-  List<int> respostasUsuario =
-      []; // Adicionei esta linha para armazenar as respostas
+  List<int> respostasUsuario = [];
+  String nivelAtual = 'fácil';
+  List<ResultadoQuiz> resultadosAcumulados = [];
 
   @override
   void initState() {
     super.initState();
-    // Garante que estamos trabalhando com uma cópia da lista original
-    perguntasEmbaralhadas = List<Map<String, dynamic>>.from(widget.quiz);
+    nivelAtual = widget.nivelInicial;
+    _carregarPerguntas();
+  }
+
+  void _carregarPerguntas() {
+    List<Map<String, dynamic>> perguntas;
+
+    switch (nivelAtual) {
+      case 'médio':
+        perguntas = widget.quizMedio;
+        break;
+      case 'difícil':
+        perguntas = widget.quizDificil;
+        perguntas =
+            perguntas.length > 20 ? perguntas.sublist(0, 20) : perguntas;
+        break;
+      default:
+        perguntas = widget.quizFacil;
+    }
+
+    perguntasEmbaralhadas = List<Map<String, dynamic>>.from(perguntas);
     _embaralharPerguntas();
-    respostasUsuario =
-        List.filled(perguntasEmbaralhadas.length, 0); // Inicializa a lista
+    respostasUsuario = List.filled(perguntasEmbaralhadas.length, -1);
   }
 
   void _embaralharPerguntas() {
@@ -44,11 +72,9 @@ class _QuizState extends State<Quiz> {
     }
   }
 
-  void respondeu(int respostaNumero) {
+  void responder(int respostaNumero) {
     setState(() {
       final perguntaAtual = perguntasEmbaralhadas[perguntaNumero - 1];
-
-      // Armazena a resposta do usuário
       respostasUsuario[perguntaNumero - 1] = respostaNumero;
 
       if (perguntaAtual['alternativa_correta'] == respostaNumero) {
@@ -58,113 +84,197 @@ class _QuizState extends State<Quiz> {
       }
 
       if (kDebugMode) {
-        print('acertos totais: $acertos erros totais: $erros');
+        print('Acertos totais: $acertos | Erros totais: $erros');
       }
 
-      if (perguntaNumero == perguntasEmbaralhadas.length) {
-        Navigator.pushNamed(
-          context,
-          'Resultados',
-          arguments: Argumentos(
-            acertos,
-            perguntasEmbaralhadas.length,
-            perguntasEmbaralhadas,
-            respostasUsuario,
-          ),
-        );
+      // Correção: Adicionados parênteses externos para agrupar toda a condição
+      if ((perguntaNumero == 10 && nivelAtual == 'fácil') ||
+          (perguntaNumero == 20 &&
+              (nivelAtual == 'médio' || nivelAtual == 'difícil'))) {
+        _mostrarDialogoMudancaNivel();
+      } else if (perguntaNumero == perguntasEmbaralhadas.length) {
+        _finalizarQuiz();
       } else {
         perguntaNumero++;
       }
     });
   }
 
+  Future<void> _mostrarDialogoMudancaNivel() async {
+    resultadosAcumulados.add(ResultadoQuiz(
+      nivel: nivelAtual,
+      acertos: acertos,
+      totalPerguntas: nivelAtual == 'fácil' ? 10 : 20,
+      perguntas: perguntasEmbaralhadas,
+      respostasUsuario: respostasUsuario,
+    ));
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('Você completou o nível $nivelAtual!'),
+        content: const Text(
+            'Deseja avançar para o próximo nível ou repetir o atual?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                perguntaNumero = 1;
+                acertos = 0;
+                erros = 0;
+                _embaralharPerguntas();
+                respostasUsuario =
+                    List.filled(perguntasEmbaralhadas.length, -1);
+              });
+            },
+            child: const Text('Repetir nível'),
+          ),
+          if (nivelAtual != 'difícil')
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() {
+                  nivelAtual = nivelAtual == 'fácil' ? 'médio' : 'difícil';
+                  perguntaNumero = 1;
+                  acertos = 0;
+                  erros = 0;
+                  _carregarPerguntas();
+                });
+              },
+              child: Text(
+                  'Ir para ${nivelAtual == 'fácil' ? 'médio' : 'difícil'}'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _finalizarQuiz() {
+    resultadosAcumulados.add(ResultadoQuiz(
+      nivel: nivelAtual,
+      acertos: acertos,
+      totalPerguntas: perguntasEmbaralhadas.length,
+      perguntas: perguntasEmbaralhadas,
+      respostasUsuario: respostasUsuario,
+    ));
+
+    Navigator.pushNamed(
+      context,
+      'Resultados',
+      arguments: Argumentos(resultadosAcumulados),
+    );
+  }
+
   void _mostrarMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('Início'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/', // Ou o nome da rota da sua Homepage
-                    (Route<dynamic> route) => false,
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.restart_alt),
-                title: const Text('Reiniciar Quiz'),
-                onTap: () {
-                  Navigator.pop(context);
-                  setState(() {
-                    perguntaNumero = 1;
-                    acertos = 0;
-                    erros = 0;
-                    _embaralharPerguntas();
-                    respostasUsuario =
-                        List.filled(perguntasEmbaralhadas.length, 0);
-                  });
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.info),
-                title: const Text('Sobre'),
-                onTap: () {
-                  Navigator.pop(context);
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Sobre o Quiz'),
-                      content: const Text(
-                          'Aplicativo de Quiz desenvolvido © Leandro Bezerra.'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-              // Novo botão de Sair
-              ListTile(
-                leading: const Icon(Icons.exit_to_app, color: Colors.red),
-                title: const Text('Sair', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  Navigator.pop(context); // Fecha o menu
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Sair do Aplicativo'),
-                      content: const Text('Deseja realmente sair do quiz?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancelar'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context); // Fecha o diálogo
-                            SystemNavigator.pop(); // Fecha o aplicativo
-                          },
-                          child: const Text('Sair',
-                              style: TextStyle(color: Colors.red)),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.home, color: Colors.blue),
+                  title: const Text('Início',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/',
+                      (Route<dynamic> route) => false,
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.restart_alt, color: Colors.green),
+                  title: const Text('Reiniciar Quiz',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    if (mounted) {
+                      setState(() {
+                        perguntaNumero = 1;
+                        acertos = 0;
+                        erros = 0;
+                        _embaralharPerguntas();
+                        respostasUsuario =
+                            List.filled(perguntasEmbaralhadas.length, -1);
+                      });
+                    }
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.info, color: Colors.orange),
+                  title: const Text('Sobre',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    showDialog(
+                      context: context,
+                      barrierDismissible: true,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Sobre o Quiz',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        content: const Text(
+                            'Aplicativo de Quiz desenvolvido © Leandro Bezerra.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('OK',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.exit_to_app, color: Colors.red),
+                  title: const Text('Sair',
+                      style: TextStyle(
+                          color: Colors.red, fontWeight: FontWeight.bold)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Sair do Aplicativo',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        content: const Text('Deseja realmente sair do quiz?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancelar'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              SystemNavigator.pop();
+                            },
+                            child: const Text('Sair',
+                                style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -173,81 +283,145 @@ class _QuizState extends State<Quiz> {
 
   @override
   Widget build(BuildContext context) {
-    // Verificação de segurança
-    if (perguntasEmbaralhadas.isEmpty ||
-        perguntaNumero > perguntasEmbaralhadas.length) {
-      return const Scaffold(
-        body: Center(child: Text('Nenhuma pergunta disponível')),
+    if (perguntasEmbaralhadas.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Quiz')),
+        body: const Center(
+          child: Text('Nenhuma pergunta disponível',
+              style: TextStyle(fontSize: 18)),
+        ),
+      );
+    }
+
+    if (perguntaNumero > perguntasEmbaralhadas.length || perguntaNumero < 1) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Quiz')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('Pergunta inválida', style: TextStyle(fontSize: 18)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    perguntaNumero = 1;
+                    acertos = 0;
+                    erros = 0;
+                  });
+                },
+                child: const Text('Reiniciar Quiz'),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
     final perguntaAtual = perguntasEmbaralhadas[perguntaNumero - 1];
-    final respostas = perguntaAtual['respostas'] as List<String>;
+    final respostas =
+        (perguntaAtual['respostas'] as List?)?.cast<String>() ?? [];
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Center(child: Text('Quiz')),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () => _mostrarMenu(context),
-            ),
-          ],
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0), // Reduzi o padding geral
+    return Scaffold(
+      appBar: AppBar(
+        title: Center(child: Text('Quiz - Nível $nivelAtual')),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => _mostrarMenu(context),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Align(
-                alignment: Alignment.center,
-                child: Text(
-                  'Pergunta $perguntaNumero de ${perguntasEmbaralhadas.length}',
-                  style: const TextStyle(fontSize: 18), // Fonte reduzida
-                ),
-              ),
-              Center(
-                child: Text(
-                  'Pergunta: \n\n${perguntaAtual['pergunta']}',
-                  style: const TextStyle(fontSize: 18), // Fonte reduzida
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              ...respostas.asMap().entries.map((entry) {
-                final index = entry.key;
-                final resposta = entry.value;
-
-                return SizedBox(
-                  width: double.infinity,
-                  height: 60, // Altura fixa para todos os botões
-                  child: ElevatedButton(
-                    onPressed: () {
-                      respondeu(index + 1);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16), // Padding horizontal reduzido
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(8), // Borda mais suave
+              Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Text(
+                    'Pergunta $perguntaNumero',
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 30),
+                  Card(
+                    elevation: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        perguntaAtual['pergunta'] ?? 'Pergunta não disponível',
+                        style: const TextStyle(fontSize: 18),
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                    child: Text(
-                      resposta,
-                      style: const TextStyle(fontSize: 16), // Fonte reduzida
-                      textAlign: TextAlign.center,
-                    ),
                   ),
-                );
-              }).toList(),
+                ],
+              ),
+              const SizedBox(height: 30),
+              Column(
+                children: respostas.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final resposta = entry.value;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: ElevatedButton(
+                      onPressed: () => responder(index + 1),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 60),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        backgroundColor: Colors.blue[800],
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        resposta,
+                        style: const TextStyle(fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+              LinearProgressIndicator(
+                value: perguntaNumero / perguntasEmbaralhadas.length,
+                backgroundColor: Colors.grey[300],
+                color: Colors.blue,
+                minHeight: 8,
+              ),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+class ResultadoQuiz {
+  final String nivel;
+  final int acertos;
+  final int totalPerguntas;
+  final List<Map<String, dynamic>> perguntas;
+  final List<int> respostasUsuario;
+
+  ResultadoQuiz({
+    required this.nivel,
+    required this.acertos,
+    required this.totalPerguntas,
+    required this.perguntas,
+    required this.respostasUsuario,
+  });
+}
+
+class Argumentos {
+  final List<ResultadoQuiz> resultados;
+
+  Argumentos(this.resultados);
 }
