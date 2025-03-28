@@ -21,8 +21,7 @@ class ResultadoQuiz {
 
 class Argumentos {
   final List<ResultadoQuiz> resultadosPorNivel;
-
-  Argumentos(this.resultadosPorNivel, int length);
+  Argumentos(this.resultadosPorNivel); // Removido o parâmetro extra
 }
 
 class Resultado extends StatelessWidget {

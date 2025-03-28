@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quiz_app_flutter/resultados.dart';
 
 class Quiz extends StatefulWidget {
   final List<Map<String, dynamic>> quizFacil;
@@ -87,17 +88,54 @@ class _QuizState extends State<Quiz> {
         print('Acertos totais: $acertos | Erros totais: $erros');
       }
 
-      // Correção: Adicionados parênteses externos para agrupar toda a condição
       if ((perguntaNumero == 10 && nivelAtual == 'fácil') ||
-          (perguntaNumero == 20 &&
-              (nivelAtual == 'médio' || nivelAtual == 'difícil'))) {
+          (perguntaNumero == 20 && nivelAtual == 'médio')) {
         _mostrarDialogoMudancaNivel();
-      } else if (perguntaNumero == perguntasEmbaralhadas.length) {
-        _finalizarQuiz();
+      } else if ((perguntaNumero == 20 && nivelAtual == 'difícil') ||
+          (perguntaNumero == perguntasEmbaralhadas.length)) {
+        _mostrarParabensEResultados(); // Novo método para o nível difícil
       } else {
         perguntaNumero++;
       }
     });
+  }
+
+  Future<void> _mostrarParabensEResultados() async {
+    // Salva os resultados
+    resultadosAcumulados.removeWhere((r) => r.nivel == nivelAtual);
+    resultadosAcumulados.add(ResultadoQuiz(
+      nivel: nivelAtual,
+      acertos: acertos,
+      totalPerguntas: perguntasEmbaralhadas.length,
+      perguntas: perguntasEmbaralhadas,
+      respostasUsuario: respostasUsuario,
+    ));
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Parabéns!, Você completou todos os níveis',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context); // Volta para a tela anterior
+            },
+            child: const Text('Voltar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _finalizarQuiz();
+            },
+            child: const Text('Ver Resultados',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _mostrarDialogoMudancaNivel() async {
@@ -152,6 +190,9 @@ class _QuizState extends State<Quiz> {
   }
 
   void _finalizarQuiz() {
+    // Verifica se já existe um resultado para este nível
+    resultadosAcumulados.removeWhere((r) => r.nivel == nivelAtual);
+
     resultadosAcumulados.add(ResultadoQuiz(
       nivel: nivelAtual,
       acertos: acertos,
@@ -163,7 +204,7 @@ class _QuizState extends State<Quiz> {
     Navigator.pushNamed(
       context,
       'Resultados',
-      arguments: Argumentos(resultadosAcumulados),
+      arguments: Argumentos(resultadosAcumulados), // Cria uma nova lista
     );
   }
 
@@ -402,26 +443,4 @@ class _QuizState extends State<Quiz> {
       ),
     );
   }
-}
-
-class ResultadoQuiz {
-  final String nivel;
-  final int acertos;
-  final int totalPerguntas;
-  final List<Map<String, dynamic>> perguntas;
-  final List<int> respostasUsuario;
-
-  ResultadoQuiz({
-    required this.nivel,
-    required this.acertos,
-    required this.totalPerguntas,
-    required this.perguntas,
-    required this.respostasUsuario,
-  });
-}
-
-class Argumentos {
-  final List<ResultadoQuiz> resultados;
-
-  Argumentos(this.resultados);
 }
