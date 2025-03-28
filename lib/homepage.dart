@@ -26,19 +26,19 @@ class _HomepageState extends State<Homepage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Center(child: Text('Quiz')),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Center(child: Text('Quiz')),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Stack(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset('assets/images/logo.jpg'),
+                const SizedBox(height: 40), // Espaço entre a imagem e o botão
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -46,27 +46,34 @@ class _HomepageState extends State<Homepage> {
                       Navigator.pushNamed(context, 'Quiz');
                     },
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.fromLTRB(100, 20, 100, 20),
+                      padding: const EdgeInsets.symmetric(vertical: 20),
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
                     ),
-                    child: const Text('Jogar', style: TextStyle(fontSize: 45)),
-                  ),
-                ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
-                  child: Text(
-                    appVersion,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
+                    child: const Text(
+                      'Jogar',
+                      style: TextStyle(fontSize: 24), // Fonte reduzida
                     ),
                   ),
                 ),
               ],
             ),
-          ),
+            // Versão posicionada na parte inferior
+            Positioned(
+              bottom: 20,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Text(
+                  appVersion,
+                  style: const TextStyle(
+                    fontSize: 14, // Fonte reduzida
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
