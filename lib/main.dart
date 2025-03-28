@@ -18,8 +18,13 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const Homepage(),
-        'Quiz': (context) => Quiz(quiz: quizData),
-        Resultado.routeName: (context) => const Resultado()
+        'Quiz': (context) => Quiz(
+              quizFacil: quizFacil,
+              quizMedio: quizMedio,
+              quizDificil: quizDificil,
+              nivelInicial: 'fácil',
+            ),
+        Resultado.routeName: (context) => const Resultado(),
       },
     );
   }

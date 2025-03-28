@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'quiz_dados.dart'; // Adicione esta importação
 
 class Homepage extends StatefulWidget {
   const Homepage({Key? key}) : super(key: key);
@@ -38,12 +39,20 @@ class _HomepageState extends State<Homepage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Image.asset('assets/images/logo.jpg'),
-                const SizedBox(height: 40), // Espaço entre a imagem e o botão
+                const SizedBox(height: 40),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, 'Quiz');
+                      Navigator.pushNamed(
+                        context,
+                        'Quiz',
+                        arguments: {
+                          'quizFacil': quizFacil, // Use as variáveis importadas
+                          'quizMedio': quizMedio,
+                          'quizDificil': quizDificil,
+                        },
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -52,13 +61,12 @@ class _HomepageState extends State<Homepage> {
                     ),
                     child: const Text(
                       'Jogar',
-                      style: TextStyle(fontSize: 24), // Fonte reduzida
+                      style: TextStyle(fontSize: 24),
                     ),
                   ),
                 ),
               ],
             ),
-            // Versão posicionada na parte inferior
             Positioned(
               bottom: 20,
               left: 0,
@@ -67,7 +75,7 @@ class _HomepageState extends State<Homepage> {
                 child: Text(
                   appVersion,
                   style: const TextStyle(
-                    fontSize: 14, // Fonte reduzida
+                    fontSize: 14,
                     color: Colors.grey,
                   ),
                 ),
