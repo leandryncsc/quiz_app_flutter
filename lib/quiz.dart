@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart'; // Para SystemNavigator
 import 'package:flutter/material.dart';
 import 'package:quiz_app_flutter/resultados.dart';
 
@@ -15,6 +16,8 @@ class _QuizState extends State<Quiz> {
   int acertos = 0;
   int erros = 0;
   late List<Map<String, dynamic>> perguntasEmbaralhadas;
+  List<int> respostasUsuario =
+      []; // Adicionei esta linha para armazenar as respostas
 
   @override
   void initState() {
@@ -22,6 +25,8 @@ class _QuizState extends State<Quiz> {
     // Garante que estamos trabalhando com uma cópia da lista original
     perguntasEmbaralhadas = List<Map<String, dynamic>>.from(widget.quiz);
     _embaralharPerguntas();
+    respostasUsuario =
+        List.filled(perguntasEmbaralhadas.length, 0); // Inicializa a lista
   }
 
   void _embaralharPerguntas() {
@@ -43,6 +48,9 @@ class _QuizState extends State<Quiz> {
     setState(() {
       final perguntaAtual = perguntasEmbaralhadas[perguntaNumero - 1];
 
+      // Armazena a resposta do usuário
+      respostasUsuario[perguntaNumero - 1] = respostaNumero;
+
       if (perguntaAtual['alternativa_correta'] == respostaNumero) {
         acertos++;
       } else {
@@ -57,7 +65,12 @@ class _QuizState extends State<Quiz> {
         Navigator.pushNamed(
           context,
           'Resultados',
-          arguments: Argumentos(acertos, perguntasEmbaralhadas.length),
+          arguments: Argumentos(
+            acertos,
+            perguntasEmbaralhadas.length,
+            perguntasEmbaralhadas,
+            respostasUsuario,
+          ),
         );
       } else {
         perguntaNumero++;
@@ -79,7 +92,11 @@ class _QuizState extends State<Quiz> {
                 title: const Text('Início'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.pop(context); // Volta para a tela anterior
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/', // Ou o nome da rota da sua Homepage
+                    (Route<dynamic> route) => false,
+                  );
                 },
               ),
               ListTile(
@@ -92,6 +109,8 @@ class _QuizState extends State<Quiz> {
                     acertos = 0;
                     erros = 0;
                     _embaralharPerguntas();
+                    respostasUsuario =
+                        List.filled(perguntasEmbaralhadas.length, 0);
                   });
                 },
               ),
@@ -110,6 +129,35 @@ class _QuizState extends State<Quiz> {
                         TextButton(
                           onPressed: () => Navigator.pop(context),
                           child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              // Novo botão de Sair
+              ListTile(
+                leading: const Icon(Icons.exit_to_app, color: Colors.red),
+                title: const Text('Sair', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(context); // Fecha o menu
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Sair do Aplicativo'),
+                      content: const Text('Deseja realmente sair do quiz?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancelar'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context); // Fecha o diálogo
+                            SystemNavigator.pop(); // Fecha o aplicativo
+                          },
+                          child: const Text('Sair',
+                              style: TextStyle(color: Colors.red)),
                         ),
                       ],
                     ),
@@ -149,7 +197,7 @@ class _QuizState extends State<Quiz> {
           ],
         ),
         body: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(16.0), // Reduzi o padding geral
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -157,13 +205,13 @@ class _QuizState extends State<Quiz> {
                 alignment: Alignment.center,
                 child: Text(
                   'Pergunta $perguntaNumero de ${perguntasEmbaralhadas.length}',
-                  style: const TextStyle(fontSize: 20),
+                  style: const TextStyle(fontSize: 18), // Fonte reduzida
                 ),
               ),
               Center(
                 child: Text(
                   'Pergunta: \n\n${perguntaAtual['pergunta']}',
-                  style: const TextStyle(fontSize: 20),
+                  style: const TextStyle(fontSize: 18), // Fonte reduzida
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -173,18 +221,25 @@ class _QuizState extends State<Quiz> {
 
                 return SizedBox(
                   width: double.infinity,
+                  height: 60, // Altura fixa para todos os botões
                   child: ElevatedButton(
                     onPressed: () {
                       respondeu(index + 1);
                     },
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.fromLTRB(100, 20, 100, 20),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16), // Padding horizontal reduzido
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(8), // Borda mais suave
+                      ),
                     ),
                     child: Text(
                       resposta,
-                      style: const TextStyle(fontSize: 20),
+                      style: const TextStyle(fontSize: 16), // Fonte reduzida
+                      textAlign: TextAlign.center,
                     ),
                   ),
                 );
